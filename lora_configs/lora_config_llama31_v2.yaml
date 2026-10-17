@@ -1,0 +1,36 @@
+model: "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"
+train: true
+fine_tune_type: lora
+
+# 新数据集目录（纯文本 messages 格式，已修复 special token 与 JSON 输出问题）
+data: "training_data/emotion_data_v2"
+
+batch_size: 2
+iters: 900
+learning_rate: 1.0000e-05
+
+adapter_path: "adapters_llama31_v2"
+
+# 8B 模型内存优化设置
+num_layers: 32
+max_seq_length: 1024
+grad_checkpoint: true
+grad_accumulation_steps: 4
+
+# 只对 assistant 回复计算 loss
+mask_prompt: true
+
+# 每 300 步保存一次 checkpoint
+save_every: 300
+
+# 每个 epoch 评估一次（1800 / (2*4) = 225 步）
+steps_per_eval: 225
+
+lora_parameters:
+  keys: ["self_attn.q_proj", "self_attn.v_proj", "self_attn.k_proj", "self_attn.o_proj"]
+  rank: 16
+  scale: 32
+  dropout: 0.05
+
+save_as_gguf: false
+quantize: false

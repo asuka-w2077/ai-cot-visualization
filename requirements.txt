@@ -1,0 +1,6 @@
+# 运行环境：macOS + Apple Silicon + Python 3.11（建议 conda）
+# conda create -n mlx python=3.11 && conda activate mlx
+mlx-lm>=0.20.0
+huggingface_hub>=0.23.0
+PyYAML>=6.0
+ddgs>=9.0.0

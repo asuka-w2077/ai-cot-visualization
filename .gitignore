@@ -1,0 +1,26 @@
+# macOS / 编辑器
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# 运行时产物
+*.log
+
+# 归档与备份
+*.zip
+*.bak
+
+# 不随仓库分发的内容
+插件安装脚本/
+训练样本弃用数据/
+
+# 模型权重：历史实验线不入库；
+# v2 只保留最终 adapters.safetensors（Git LFS），中间 checkpoint 不入库
+adapters/
+adapters_llama31/
+adapters_llama31_v2/0000*.safetensors
+
+# 个人测试笔记
+*.rtf

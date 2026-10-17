@@ -1,0 +1,49 @@
+{
+    "adapter_path": "adapters_llama31_v2",
+    "batch_size": 2,
+    "clear_cache_threshold": 0,
+    "config": "MLX LoRA \u5fae\u8c03\u914d\u7f6e\u6587\u4ef6/lora_config_llama31_v2.yaml",
+    "data": "\u8bad\u7ec3\u6837\u672c/emotion_data_v2",
+    "fine_tune_type": "lora",
+    "grad_accumulation_steps": 4,
+    "grad_checkpoint": true,
+    "iters": 900,
+    "learning_rate": 1e-05,
+    "lora_parameters": {
+        "keys": [
+            "self_attn.q_proj",
+            "self_attn.v_proj",
+            "self_attn.k_proj",
+            "self_attn.o_proj"
+        ],
+        "rank": 16,
+        "scale": 32,
+        "dropout": 0.05
+    },
+    "lr_schedule": null,
+    "mask_prompt": true,
+    "max_seq_length": 1024,
+    "model": "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+    "num_layers": 32,
+    "optimizer": "adam",
+    "optimizer_config": {
+        "adam": {},
+        "adamw": {},
+        "muon": {},
+        "sgd": {},
+        "adafactor": {}
+    },
+    "project_name": null,
+    "quantize": false,
+    "report_to": null,
+    "resume_adapter_file": null,
+    "save_as_gguf": false,
+    "save_every": 300,
+    "seed": 0,
+    "steps_per_eval": 225,
+    "steps_per_report": 10,
+    "test": false,
+    "test_batches": 500,
+    "train": true,
+    "val_batches": 25
+}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI思维链可视化 - Week 2</title>
+    <style>
+        body { background: #0a0a0a; color: #00ff9d; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
+        .controls { text-align: center; margin: 20px 0; }
+        select { background: #1a1a1a; color: #00ff9d; border: 1px solid #00ff9d; padding: 8px; border-radius: 4px; }
+        .chat-box { background: #111; border: 1px solid #333; border-radius: 8px; height: 400px; overflow-y: auto; padding: 20px; margin-bottom: 20px; }
+        .message { margin: 10px 0; padding: 12px; border-radius: 6px; max-width: 80%; }
+        .user { background: #1e3a5f; margin-left: auto; color: #fff; }
+        .ai { background: #0d3328; margin-right: auto; color: #00ff9d; }
+        .cot-process { background: #1a0a0a; border-left: 3px solid #ff0055; padding: 10px; margin: 5px 0; font-size: 0.85em; color: #ff6b6b; }
+        .cot-process.safe { border-color: #00ff9d; color: #00ff9d; }
+        .input-row { display: flex; gap: 10px; }
+        input { flex: 1; background: #1a1a1a; color: #fff; border: 1px solid #333; padding: 12px; border-radius: 4px; }
+        button { background: #00ff9d; color: #000; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #00cc7a; }
+        .status { text-align: center; color: #666; font-size: 0.9em; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 AI CoT 可视化监控台</h1>
+        <div class="controls">
+            <label>模型选择：</label>
+            <select id="modelSelect">
+                <option value="llama3.1:8b">Llama 3.1 8B (主力)</option>
+                <option value="llama3.2:3b">Llama 3.2 3B (轻量)</option>
+            </select>
+        </div>
+        <div class="chat-box" id="chatBox">
+            <div style="text-align: center; color: #555; margin-top: 150px;">
+                输入消息查看 AI 思维链...<br>
+                测试词："活着没意思"、"写周报"
+            </div>
+        </div>
+        <div class="input-row">
+            <input type="text" id="userInput" placeholder="输入消息..." onkeypress="if(event.key==='Enter')send()">
+            <button onclick="send()">发送</button>
+        </div>
+        <div class="status" id="status">就绪 | Ollama: localhost:11434</div>
+    </div>
+
+    <script>
+        const dangerWords = ['自杀', '自残', '不想活', '活着没意思', '死', '跳楼', 'kill'];
+        
+        async function send() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const model = document.getElementById('modelSelect').value;
+            const chatBox = document.getElementById('chatBox');
+            const status = document.getElementById('status');
+            
+            // 用户消息
+            appendMsg(text, 'user');
+            input.value = '';
+            
+            // CoT 过程展示
+            const cotId = 'cot-' + Date.now();
+            const isDanger = dangerWords.some(w => text.includes(w));
+            const cotDiv = document.createElement('div');
+            cotDiv.className = isDanger ? 'cot-process' : 'cot-process safe';
+            cotDiv.id = cotId;
+            cotDiv.innerHTML = `🤔 分析意图...<br>📝 输入长度: ${text.length}字`;
+            chatBox.appendChild(cotDiv);
+            
+            // 模拟 CoT 步骤
+            await sleep(400);
+            if (isDanger) {
+                cotDiv.innerHTML += `<br>⚠️ 检测到高风险关键词`;
+                cotDiv.style.background = '#2d0a0a';
+                await sleep(600);
+                cotDiv.innerHTML += `<br>🛡️ 启动安全干预协议`;
+            } else if (text.includes('周报') || text.includes('总结')) {
+                cotDiv.innerHTML += `<br>📋 识别格式化需求`;
+                await sleep(500);
+                cotDiv.innerHTML += `<br>🔧 加载结构化模板`;
+            } else {
+                cotDiv.innerHTML += `<br>💭 情感陪伴模式`;
+                await sleep(500);
+                cotDiv.innerHTML += `<br>❤️ 生成共情回应`;
+            }
+            
+            // 调用 Ollama
+            status.innerText = `请求中... | 模型: ${model}`;
+            cotDiv.innerHTML += `<br>🌐 调用 ${model}...`;
+            
+            try {
+                const res = await fetch('http://localhost:11434/api/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        model: model,
+                        prompt: text,
+                        stream: false,
+                        options: {temperature: 0.7}
+                    })
+                });
+                
+                if (!res.ok) throw new Error('连接失败');
+                const data = await res.json();
+                
+                // 隐藏 CoT，显示回复（或保留 CoT 作为历史）
+                setTimeout(() => {
+                    cotDiv.style.opacity = '0.3';
+                    appendMsg(data.response, 'ai');
+                    status.innerText = `完成 | 模型: ${model} | ${new Date().toLocaleTimeString()}`;
+                }, 500);
+                
+            } catch (err) {
+                cotDiv.innerHTML += `<br>❌ 错误: ${err.message}`;
+                status.innerText = '错误 | 检查 Ollama 是否运行';
+            }
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        function appendMsg(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = text.replace(/\n/g, '<br>');
+            document.getElementById('chatBox').appendChild(div);
+        }
+        
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    </script>
+</body>
+</html>
